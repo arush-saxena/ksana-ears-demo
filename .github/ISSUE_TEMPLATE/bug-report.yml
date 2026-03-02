@@ -1,0 +1,84 @@
+name: "\U0001F41B Bug Report"
+description: Report a bug in the EARS platform
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        Thanks for reporting an issue. Please fill out the sections below
+        so an agent or developer can reproduce and fix it quickly.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system is affected?
+      options:
+        - Survey API
+        - Sensing Pipeline
+        - Authentication / Authorization
+        - Data De-identification
+        - Mobile App (iOS)
+        - Mobile App (Android)
+        - Database
+        - Infrastructure / CI
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is the impact?
+      options:
+        - P1 - Critical (PHI exposure, data loss)
+        - P2 - High (feature broken, no workaround)
+        - P3 - Medium (feature degraded, workaround exists)
+        - P4 - Low (cosmetic, minor inconvenience)
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug. What did you expect vs what actually happened?
+      placeholder: |
+        **Expected:** Survey responses should be stored with encrypted participantId
+        **Actual:** participantId appears in plaintext in the application logs
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the issue
+      placeholder: |
+        1. Submit a survey response via POST /api/surveys/:id/responses
+        2. Check application logs in Azure Monitor
+        3. Search for the participantId value
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: |
+        Any additional context: logs, screenshots, environment details.
+        **IMPORTANT: Do NOT paste PHI or real participant data here.**
+      placeholder: Attach sanitized log snippets, screenshots, or config details
+
+  - type: checkboxes
+    id: phi-check
+    attributes:
+      label: PHI Safety Check
+      description: Confirm before submitting
+      options:
+        - label: I have verified this report contains NO Protected Health Information (PHI)
+          required: true

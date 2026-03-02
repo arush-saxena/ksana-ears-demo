@@ -1,0 +1,77 @@
+name: "\U0001F680 Feature Request"
+description: Suggest a new feature or enhancement for the EARS platform
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+        Describe the feature using the **WRAP framework** so agents
+        and developers have full context to implement it.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system would this affect?
+      options:
+        - Survey API
+        - Sensing Pipeline
+        - Authentication / Authorization
+        - Data De-identification
+        - Mobile App
+        - Analytics / Reporting
+        - Infrastructure / CI
+        - Documentation
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: wrap-what
+    attributes:
+      label: "What (Goal)"
+      description: What should this feature accomplish? What problem does it solve?
+      placeholder: |
+        Add support for audio-diary sensor type so researchers can collect
+        voice recordings for sentiment analysis studies.
+    validations:
+      required: true
+
+  - type: textarea
+    id: wrap-requirements
+    attributes:
+      label: "Requirements"
+      description: Specific technical requirements and acceptance criteria
+      placeholder: |
+        - Accept audio batches via POST /api/sensing/upload with sensorType: 'audio_diary'
+        - Audio must be encrypted with AES-256 before storage
+        - Maximum recording duration: 5 minutes
+        - Supported formats: m4a, opus
+        - De-identify by stripping metadata (EXIF equivalent)
+        - Unit tests with ≥80% coverage
+    validations:
+      required: true
+
+  - type: textarea
+    id: wrap-architecture
+    attributes:
+      label: "Architecture & Approach"
+      description: Suggested implementation approach (optional but helpful for agents)
+      placeholder: |
+        Extend SensingService.ingest() to handle 'audio_diary' type.
+        Add AudioProcessor class in src/sensing/ for format validation
+        and metadata stripping. Store blobs in a separate container
+        'audio-data-{studyId}' with lifecycle policy.
+
+  - type: textarea
+    id: wrap-plan
+    attributes:
+      label: "Plan / Test Strategy"
+      description: How should this be tested and validated?
+      placeholder: |
+        1. Unit tests for AudioProcessor (format validation, metadata strip)
+        2. Integration test for upload endpoint with mock audio file
+        3. Verify no audio metadata in stored blob
+        4. HIPAA review of new data flow

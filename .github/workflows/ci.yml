@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test -- --coverage --ci
+        env:
+          NODE_ENV: test
+          ENCRYPTION_KEY: test-key-not-real-256bit-aaaa0000
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Check for PHI in logs
+        run: npm run audit:logs
+
+      - name: Verify de-identification
+        run: npm run verify:deidentification
+
+  hipaa-compliance-check:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for process.env usage
+        run: |
+          echo "Checking for direct process.env usage in src/..."
+          VIOLATIONS=$(grep -rn "process\.env" src/ --include="*.ts" \
+            | grep -v "config.ts" \
+            | grep -v "// KNOWN:" \
+            || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::error::Direct process.env usage found (use ConfigService instead):"
+            echo "$VIOLATIONS"
+            exit 1
+          fi
+          echo "✅ No unauthorized process.env usage found"
+
+      - name: Check for console.log in production code
+        run: |
+          echo "Checking for console.log in src/..."
+          VIOLATIONS=$(grep -rn "console\.\(log\|warn\|error\|debug\)" src/ --include="*.ts" \
+            | grep -v "logger.ts" \
+            | grep -v "// KNOWN:" \
+            || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::warning::Direct console usage found (use Logger instead):"
+            echo "$VIOLATIONS"
+          fi
+
+      - name: Check for Date.now() usage
+        run: |
+          echo "Checking for Date.now() in src/..."
+          VIOLATIONS=$(grep -rn "Date\.now()\|new Date()" src/ --include="*.ts" \
+            | grep -v "timeService.ts" \
+            | grep -v "middleware/" \
+            | grep -v "// KNOWN:" \
+            || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::warning::Direct Date usage found (use TimeService instead):"
+            echo "$VIOLATIONS"
+          fi
