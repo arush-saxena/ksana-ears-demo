@@ -47,6 +47,11 @@
     "testEnvironment": "node",
     "roots": ["<rootDir>/tests"],
     "coverageDirectory": "coverage",
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "tsconfig.test.json"
+      }
+    },
     "coverageThreshold": {
       "global": {
         "branches": 80,

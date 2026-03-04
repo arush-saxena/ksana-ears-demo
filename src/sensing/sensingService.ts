@@ -1,10 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
 import { DatabaseService } from '../utils/database';
 import { SecureStorageService } from '../utils/secureStorage';
 import { TimeService } from '../utils/timeService';
-import { Logger } from '../utils/logger';
-
-const logger = new Logger('SensingService');
 
 /** Sensor types supported by EARS */
 export type SensorType =
@@ -53,7 +49,6 @@ export interface ParticipantSensingStatus {
 export class SensingService {
   private db = DatabaseService;
   private storage = new SecureStorageService();
-  private maxRetries = 3;
 
   /** Check if a batch has already been processed (idempotency) */
   async checkDuplicate(batchId: string): Promise<boolean> {
@@ -69,7 +64,7 @@ export class SensingService {
    * Pipeline: validate → de-identify → encrypt → store → record metadata
    */
   async ingestBatch(batch: SensorBatch): Promise<IngestionResult> {
-    const startTime = Date.now(); // BUG: Should use TimeService.utcNow() per coding standards
+    const startTime = TimeService.utcNowMs();
 
     // Step 1: Validate readings
     this.validateReadings(batch);
@@ -94,7 +89,7 @@ export class SensingService {
       [batch.batchId, batch.deviceId, batch.sensorType, batch.readings.length, batch.receivedAt]
     );
 
-    const processingTimeMs = Date.now() - startTime; // BUG: Same Date.now() issue
+    const processingTimeMs = TimeService.utcNowMs() - startTime;
 
     return {
       batchId: batch.batchId,
