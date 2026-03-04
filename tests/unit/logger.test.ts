@@ -45,6 +45,20 @@ describe('Logger', () => {
       expect(logOutput).not.toContain('-123.07246');
     });
 
+    it('should redact survey answers from log output', () => {
+      logger.info('Survey response submitted', {
+        answers: [
+          { questionId: 'q1', value: 'yes' },
+          { questionId: 'q2', value: 'no' },
+        ],
+      });
+
+      const logOutput = consoleSpy.mock.calls[0][0];
+      expect(logOutput).not.toContain('q1');
+      expect(logOutput).not.toContain('yes');
+      expect(logOutput).toContain('[REDACTED]');
+    });
+
     it('should redact email and phone from log output', () => {
       logger.info('Test message', {
         email: 'patient@example.com',
