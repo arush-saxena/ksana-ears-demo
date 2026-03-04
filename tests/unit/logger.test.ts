@@ -70,6 +70,22 @@ describe('Logger', () => {
     });
   });
 
+  describe('survey response logging', () => {
+    it('should redact participantId when logging survey response submission', () => {
+      // Simulate the logging pattern from surveys.ts POST /api/surveys/:surveyId/responses
+      const participantId = 'PARTICIPANT-PHI-12345';
+      const surveyId = 'survey-001';
+
+      // This is how we now log (PHI is in metadata and gets scrubbed)
+      logger.info('Survey response submitted', { surveyId, participantId });
+
+      const logOutput = consoleSpy.mock.calls[0][0];
+      expect(logOutput).not.toContain(participantId);
+      expect(logOutput).toContain('[REDACTED]');
+      expect(logOutput).toContain(surveyId); // Non-PHI should still be logged
+    });
+  });
+
   describe('log levels', () => {
     it('should use console.log for info level', () => {
       logger.info('Info message');

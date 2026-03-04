@@ -59,9 +59,8 @@ router.post('/:surveyId/responses', async (req: Request, res: Response, next: Ne
     const { surveyId } = req.params;
     const { participantId, answers, startTimestamp, endTimestamp } = req.body;
 
-    // BUG: participantId is logged in plaintext — this violates HIPAA §164.312
-    // TODO: Fix this — should use anonymized study participant ID only
-    console.log(`Survey response from participant ${participantId} for survey ${surveyId}`);
+    // Log survey response submission (PHI fields auto-redacted by Logger)
+    logger.info('Survey response submitted', { surveyId });
 
     const response = await surveyService.submitResponse({
       surveyId,
